@@ -5,3 +5,6 @@ rules:
     mergeMethod: rebase
     conflictReviewers:
       - mLupine
+  - base: MK3
+    upstream: prusa3d:MK3
+    mergeMethod: hardreset
