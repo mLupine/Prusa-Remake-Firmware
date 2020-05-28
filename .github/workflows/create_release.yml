@@ -1,0 +1,31 @@
+on:
+  push:
+    branches:
+      - MK3S-remake
+
+name: Create Release
+
+jobs:
+  build:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d %H:%i:%s')"
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Prusa MK3S Remake firmware ${{ steps.date.outputs.date }} (${{ github.ref }})
+          body: |
+            This is an automated build with the latest firmware code changes.
+            
+            Visit the [releases page](https://github.com/prusa3d/Prusa-Firmware/releases) of the official firmware for a changelog.
+          draft: false
+          prerelease: false
