@@ -3,20 +3,9 @@ on:
     branches:
       - MK3S-remake
 
-name: Build and create a release
+name: Create a release
 
 jobs:
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Execute the build script
-        run: ./build.sh
-      - name: Debug output
-        run: ls -lah
-        
   create_release:
     name: Create Release
     runs-on: ubuntu-latest
@@ -35,7 +24,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
+          tag_name: release-${{ steps.slug.outputs.sha8 }}
           release_name: Prusa MK3S Remake firmware ${{ steps.slug.outputs.sha8 }}
           body: |
             This is an automated build with the latest firmware code changes, built ${{ steps.date.outputs.date }} from the ${{ github.ref }} branch.
