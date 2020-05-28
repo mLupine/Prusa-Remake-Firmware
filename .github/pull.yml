@@ -1,0 +1,7 @@
+version: "1"
+rules:
+  - base: MK3S-remake
+    upstream: prusa3d:MK3
+    mergeMethod: rebase
+    conflictReviewers:
+      - mLupine
