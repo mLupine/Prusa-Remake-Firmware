@@ -18,17 +18,34 @@ jobs:
       - name: Get short SHA
         id: slug
         run: echo "::set-output name=sha8::$(echo ${GITHUB_SHA} | cut -c1-8)"
-      - name: Execute the build script
+      - name: Prepare E0T5 config
+        run: |
+          rm Firmware/Configuration_prusa.h || true
+          cp Firmware/variants/1_75mm_MK3S-EINSy10a-E3DV6Clone-E0T5.h Firmware/Configuration_prusa.h
+      - name: Execute the build script for E0T5
         run: ./build.sh
       - name: Rename compiled binary
-        run: mv ../Prusa-Firmware-build/Firmware.ino.hex ./PrusaRemake_1_75mm_MK3S_EINSy10a_E3DV6Clone-firmware-${{ steps.slug.outputs.sha8 }}.hex  
+        run: mv ../Prusa-Firmware-build/Firmware.ino.hex ./PrusaRemake_1_75mm_MK3S_EINSy10a_E3DV6Clone-E0T5-firmware-${{ steps.slug.outputs.sha8 }}.hex  
       - uses: actions/upload-artifact@v2
         with:
           name: firmware-${{ steps.slug.outputs.sha8 }}
-          path: ./PrusaRemake_1_75mm_MK3S_EINSy10a_E3DV6Clone-firmware-${{ steps.slug.outputs.sha8 }}.hex
+          path: ./PrusaRemake_1_75mm_MK3S_EINSy10a_E3DV6Clone-E0T5-firmware-${{ steps.slug.outputs.sha8 }}.hex
+      - name: Prepare E0T11 config
+        run: |
+          rm Firmware/Configuration_prusa.h || true
+          cp Firmware/variants/1_75mm_MK3S-EINSy10a-E3DV6Clone-E0T11.h Firmware/Configuration_prusa.h
+      - name: Execute the build script for E0T11
+        run: ./build.sh
+      - name: Rename compiled binary
+        run: mv ../Prusa-Firmware-build/Firmware.ino.hex ./PrusaRemake_1_75mm_MK3S_EINSy10a_E3DV6Clone-E0T11-firmware-${{ steps.slug.outputs.sha8 }}.hex  
+      - uses: actions/upload-artifact@v2
+        with:
+          name: firmware-${{ steps.slug.outputs.sha8 }}
+          path: ./PrusaRemake_1_75mm_MK3S_EINSy10a_E3DV6Clone-E0T11-firmware-${{ steps.slug.outputs.sha8 }}.hex
     outputs:
       firmware_artifact: firmware-${{ steps.slug.outputs.sha8 }}
-      firmware_file_name: PrusaRemake_1_75mm_MK3S_EINSy10a_E3DV6Clone-firmware-${{ steps.slug.outputs.sha8 }}.hex
+      firmware_file_name_e0t5: PrusaRemake_1_75mm_MK3S_EINSy10a_E3DV6Clone-E0T5-firmware-${{ steps.slug.outputs.sha8 }}.hex
+      firmware_file_name_e0t11: PrusaRemake_1_75mm_MK3S_EINSy10a_E3DV6Clone-E0T11-firmware-${{ steps.slug.outputs.sha8 }}.hex
         
   create_release:
     name: Create Release
@@ -53,6 +70,8 @@ jobs:
           release_name: Prusa MK3S Remake firmware ${{ steps.slug.outputs.sha8 }}
           body: |
             This is an automated build with the latest firmware code changes, built ${{ steps.date.outputs.date }} from the ${{ github.ref }} branch.
+
+            The `${{ needs.build.outputs.firmware_file_name_e0t5 }}` firmware is for printers with the _ATC Semitec 104GT-2_ thermistor (Used in ParCan & J-Head). `${{ needs.build.outputs.firmware_file_name_e0t11 }}` is for printers with _100k beta 3950 1%_ thermistors. Please make sure you download the correct one.
             
             Visit the [releases page](https://github.com/prusa3d/Prusa-Firmware/releases) of the official firmware for a changelog.
           draft: false
@@ -70,13 +89,23 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: ${{ needs.build.outputs.firmware_artifact }}
-      - name: Upload release asset
-        id: upload-release-asset 
+      - name: Upload release asset for E0T5
+        id: upload-release-asset-e0t5
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create_release.outputs.upload_url }} 
-          asset_path: ./${{ needs.build.outputs.firmware_artifact }}/${{ needs.build.outputs.firmware_file_name }}
-          asset_name: ${{ needs.build.outputs.firmware_file_name }}
+          asset_path: ./${{ needs.build.outputs.firmware_artifact }}/${{ needs.build.outputs.firmware_file_name_e0t5 }}
+          asset_name: ${{ needs.build.outputs.firmware_file_name_e0t5 }}
+          asset_content_type: application/x-binary
+      - name: Upload release asset for E0T11
+        id: upload-release-asset-e0t11
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }} 
+          asset_path: ./${{ needs.build.outputs.firmware_artifact }}/${{ needs.build.outputs.firmware_file_name_e0t11 }}
+          asset_name: ${{ needs.build.outputs.firmware_file_name_e0t11 }}
           asset_content_type: application/x-binary
